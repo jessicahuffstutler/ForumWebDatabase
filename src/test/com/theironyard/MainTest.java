@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
@@ -40,11 +41,25 @@ public class MainTest {
     public void testMessage() throws SQLException {
         Connection conn = startConncetion();
         Main.insertUser(conn, "Alice", ""); //insert a user named alice and a message "hello world!"
-        Main.insertMessage(conn, 1, -1, "Hello, World!"); //1 = id, -1 = replyId
+        Main.insertMessage(conn, 1, -1, "Hello, world!"); //1 = id, -1 = replyId
         Message message = Main.selectMessage(conn, 1);
         endConnection(conn);
 
         assertTrue(message != null);
+    }
+
+    @Test
+    public void testReplies() throws SQLException {
+        Connection conn = startConncetion();
+        Main.insertUser(conn, "Alice", "");
+        Main.insertUser(conn, "Bob", "");
+        Main.insertMessage(conn, 1, -1, "Hello, world!"); //-1 means it's a top level thread
+        Main.insertMessage(conn, 2, 1, "This is a reply."); //replyid is the id of the message which is 1
+        Main.insertMessage(conn, 2, 1, "This is a ANOTHER reply.");
+        ArrayList<Message> replies = Main.selectReplies(conn, 1);
+        endConnection(conn);
+
+        assertTrue(replies.size() == 2);
     }
 
 }
