@@ -5,14 +5,45 @@ import spark.Session;
 import spark.Spark;
 import spark.template.mustache.MustacheTemplateEngine;
 
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Main {
 
-    public static void main(String[] args) {
-	    HashMap<String, User> users = new HashMap();
-        ArrayList<Message> messages = new ArrayList();
+    public static void createTables(Connection conn) throws SQLException {
+        Statement stmt = conn.createStatement();
+        stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, name VARCHAR, password VARCHAR)");
+        stmt.execute("CREATE TABLE IF NOT EXISTS messages (id IDENTITY, user_id INT, reply_id INT, text VARCHAR)");
+    }
+
+    public static void insertUser(Connection conn, String name, String password) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO users VALUES (NULL, ?, ?)"); //null is the id of the user
+        stmt.setString(1, name);
+        stmt.setString(2, password);
+        stmt.execute();
+    }
+
+    public static User selectUser(Connection conn, String name) throws SQLException { //return type is one User object or null if it cant find anything (string name tell us what user to select from the database)
+        User user = null;
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE name = ?");
+        stmt.setString(1, name);
+        ResultSet results = stmt.executeQuery(); //WHAT DOES THIS DO?
+        if (results.next()) { //using if because we only want to get the first one, no need for while to loop through the whole list
+            user = new User();
+            user.id = results.getInt("id");
+            user.password = results.getString("password");
+        }
+        return user;
+    }
+
+    public static void main(String[] args) throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:h2:./main");
+        createTables(conn);
+
+	    HashMap<String, User> users = new HashMap(); //storing things in volitile memory instead of databases
+        ArrayList<Message> messages = new ArrayList(); //storing things in volitile memory instead of databases
 
         addTestUsers(users);
         addTestMessages(messages);
