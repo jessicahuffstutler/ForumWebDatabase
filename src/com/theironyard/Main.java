@@ -38,6 +38,29 @@ public class Main {
         return user;
     }
 
+    public static void insertMessage(Connection conn, int userId, int replyId, String text) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO messages VALUES (NULL, ?, ?, ?)");
+        stmt.setInt(1, userId);
+        stmt.setInt(2, replyId);
+        stmt.setString(3, text);
+        stmt.execute();
+    }
+
+    public static Message selectMessage(Connection conn, int id) throws SQLException { //returns a message
+        Message message = null;
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM messages INNER JOIN users ON messages.user_id = users.id WHERE messages.id = ?");
+        stmt.setInt(1, id);
+        ResultSet results = stmt.executeQuery();
+        if (results.next()) {
+            message = new Message(); //got "message cannot be applied to" error so we go into Message.java and we create a blank constructor
+            message.id = results.getInt("messages.id");
+            message.replyId = results.getInt("messages.reply_id"); //reply_id is a column created in the CREATE TABLE
+            message.username = results.getString("users.name");
+            message.text = results.getString("messages.text");
+        }
+        return message;
+    }
+
     public static void main(String[] args) throws SQLException {
         Connection conn = DriverManager.getConnection("jdbc:h2:./main");
         createTables(conn);

@@ -36,4 +36,15 @@ public class MainTest {
         assertTrue(user != null); //argument is a boolean; this will assert true if it finds this user in the database
     }
 
+    @Test
+    public void testMessage() throws SQLException {
+        Connection conn = startConncetion();
+        Main.insertUser(conn, "Alice", ""); //insert a user named alice and a message "hello world!"
+        Main.insertMessage(conn, 1, -1, "Hello, World!"); //1 = id, -1 = replyId
+        Message message = Main.selectMessage(conn, 1);
+        endConnection(conn);
+
+        assertTrue(message != null);
+    }
+
 }
